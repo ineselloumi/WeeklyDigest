@@ -2,10 +2,9 @@ name: Weekly AI Adoption Gap Digest
 
 on:
   schedule:
-    # Every Monday at 16:00 UTC = 8:00 AM PST (UTC-8).
+    # Every Tuesday at 16:00 UTC = 8:00 AM PST (UTC-8).
     # Note: during PDT (Mar–Nov, UTC-7) this runs at 9:00 AM local time.
-    # Change to "0 15 * * 1" if you want 8 AM PDT instead.
-    - cron: "0 16 * * 1"
+    - cron: "0 16 * * 2"
   workflow_dispatch: # allows manual triggering from the GitHub UI
 
 jobs:
