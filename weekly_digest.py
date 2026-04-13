@@ -44,6 +44,9 @@ Relevant angles include:
 - Commentary from researchers, labs, or policymakers on this gap
 - Case studies of sectors slow to adopt AI despite clear benefits
 - Economic or organisational barriers to AI adoption
+- Personal adoption: individuals slow or reluctant to use AI tools in daily life
+- Consumer-facing AI products and why everyday users don't engage with them
+- Psychological, cultural, or accessibility barriers to personal AI use
 
 When writing the digest:
 - Focus on stories published in the past 7 days when possible
@@ -54,7 +57,9 @@ When writing the digest:
 
 USER_PROMPT = """\
 Search the web for the latest news (past 7 days) about the AI adoption gap \
-and capability overhang in AI. Find the top 3 most relevant, recent stories.
+and capability overhang in AI. Find the top 3 most relevant, recent stories. \
+Consider both professional/enterprise adoption and personal/consumer adoption — \
+if media coverage spans both, try to include at least one story from each lens.
 
 Use at most 5 web searches total — be precise with your queries so you find \
 the right articles quickly without over-searching.
