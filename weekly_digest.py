@@ -159,7 +159,7 @@ def run_agent() -> str:
             elif btype == "web_search_tool_result":
                 n = len(getattr(block, "content", []))
                 print(f"  [results] {n} result(s) returned", flush=True)
-            elif btype == "text":
+            elif btype == "text" and getattr(block, "text", None) is not None:
                 snippet = block.text.strip().replace("\n", " ")[:120]
                 if snippet:
                     print(f"  [agent] {snippet}", flush=True)
@@ -169,7 +169,7 @@ def run_agent() -> str:
 
         if response.stop_reason == "end_turn":
             # Join all text blocks from the final response.
-            full_text = "".join(b.text for b in response.content if hasattr(b, "text"))
+            full_text = "".join(b.text for b in response.content if getattr(b, "text", None) is not None)
             full_text = full_text.replace("**", "").strip()
 
             # Try to find the "Subject:" header in the final response.
@@ -185,7 +185,7 @@ def run_agent() -> str:
                     content = msg["content"]
                     if isinstance(content, list):
                         for block in content:
-                            if hasattr(block, "text"):
+                            if getattr(block, "text", None) is not None:
                                 all_text += block.text
             all_text = all_text.replace("**", "")
             idx = all_text.find("Subject:")
