@@ -123,6 +123,7 @@ def run_agent() -> str:
 
     MAX_ITERATIONS = 15
     for iteration in range(MAX_ITERATIONS):
+        print(f"  [iteration {iteration + 1}/{MAX_ITERATIONS}]", flush=True)
         # Retry up to 3 times on rate-limit errors with exponential backoff
         for attempt in range(3):
             try:
@@ -132,13 +133,14 @@ def run_agent() -> str:
                     system=SYSTEM_PROMPT,
                     tools=tools,
                     messages=messages,
+                    timeout=120,  # fail fast if the API hangs
                 )
                 break
             except anthropic.RateLimitError as e:
                 if attempt == 2:
                     raise
                 wait = 60 * (attempt + 1)
-                print(f"  [rate limit] waiting {wait}s before retry …")
+                print(f"  [rate limit] waiting {wait}s before retry …", flush=True)
                 time.sleep(wait)
 
         # Print live progress so you can watch the agent work
@@ -147,14 +149,14 @@ def run_agent() -> str:
             if btype in ("tool_use", "server_tool_use"):
                 if getattr(block, "name", "") == "web_search":
                     query = (getattr(block, "input", None) or {}).get("query", "")
-                    print(f"  [search] {query}")
+                    print(f"  [search] {query}", flush=True)
             elif btype == "web_search_tool_result":
                 n = len(getattr(block, "content", []))
-                print(f"  [results] {n} result(s) returned")
+                print(f"  [results] {n} result(s) returned", flush=True)
             elif btype == "text":
                 snippet = block.text.strip().replace("\n", " ")[:120]
                 if snippet:
-                    print(f"  [agent] {snippet}")
+                    print(f"  [agent] {snippet}", flush=True)
 
         # Append the assistant turn
         messages.append({"role": "assistant", "content": response.content})
@@ -196,7 +198,7 @@ def run_agent() -> str:
 
         if response.stop_reason == "pause_turn":
             # Server-side tool loop hit its limit; re-send to continue
-            print("  [pause_turn] continuing …")
+            print("  [pause_turn] continuing …", flush=True)
             continue
 
         if response.stop_reason == "tool_use":
@@ -260,7 +262,7 @@ def main() -> None:
         print(f"Error: missing environment variables: {', '.join(missing)}")
         sys.exit(1)
 
-    print("Running news agent …")
+    print("Running news agent …", flush=True)
     digest = run_agent()
 
     print("\n" + "=" * 64)
