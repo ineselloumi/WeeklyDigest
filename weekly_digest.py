@@ -124,23 +124,29 @@ def run_agent() -> str:
     MAX_ITERATIONS = 15
     for iteration in range(MAX_ITERATIONS):
         print(f"  [iteration {iteration + 1}/{MAX_ITERATIONS}]", flush=True)
-        # Retry up to 3 times on rate-limit errors with exponential backoff
+        # Retry up to 3 times on transient errors with exponential backoff.
+        # We use streaming so the connection stays alive for long Opus responses
+        # instead of hitting a read-timeout on a single blocking HTTP call.
         for attempt in range(3):
             try:
-                response = client.messages.create(
+                with client.messages.stream(
                     model=MODEL,
                     max_tokens=4096,
                     system=SYSTEM_PROMPT,
                     tools=tools,
                     messages=messages,
-                    timeout=120,  # fail fast if the API hangs
-                )
+                ) as stream:
+                    # Drain all SSE events; get_final_message() accumulates them.
+                    for _ in stream:
+                        pass
+                    response = stream.get_final_message()
                 break
-            except anthropic.RateLimitError as e:
+            except (anthropic.RateLimitError, anthropic.APITimeoutError) as e:
                 if attempt == 2:
                     raise
                 wait = 60 * (attempt + 1)
-                print(f"  [rate limit] waiting {wait}s before retry …", flush=True)
+                label = "rate limit" if isinstance(e, anthropic.RateLimitError) else "timeout"
+                print(f"  [{label}] waiting {wait}s before retry …", flush=True)
                 time.sleep(wait)
 
         # Print live progress so you can watch the agent work
