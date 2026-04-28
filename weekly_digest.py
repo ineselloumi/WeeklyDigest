@@ -28,7 +28,7 @@ import anthropic
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
-MODEL = "claude-opus-4-6"
+MODEL = "claude-sonnet-4-5"
 
 SYSTEM_PROMPT = """\
 You are a research assistant specialising in technology and AI policy news.
