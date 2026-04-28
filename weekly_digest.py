@@ -67,6 +67,10 @@ the right articles quickly without over-searching.
 IMPORTANT: You must include the full URL for every story. Do not omit or \
 approximate links — use the exact URL returned by your web search results.
 
+IMPORTANT: Your entire reply must be ONLY the digest below — no preamble, \
+no commentary, no explanation before or after. Start your response with the \
+word "Subject:" on the very first line.
+
 Write the output as a plain-text weekly email digest in exactly this format:
 
 Subject: Weekly AI Adoption Gap Digest – [Month Day, Year]
@@ -156,13 +160,38 @@ def run_agent() -> str:
         messages.append({"role": "assistant", "content": response.content})
 
         if response.stop_reason == "end_turn":
-            # Join all text blocks, strip markdown bold markers, then slice
-            # from "Subject:" to remove any thinking preamble before the digest.
+            # Join all text blocks from the final response.
             full_text = "".join(b.text for b in response.content if hasattr(b, "text"))
-            full_text = full_text.replace("**", "")
+            full_text = full_text.replace("**", "").strip()
+
+            # Try to find the "Subject:" header in the final response.
             idx = full_text.find("Subject:")
             if idx != -1:
                 return full_text[idx:]
+
+            # Fallback: search across ALL accumulated assistant turns —
+            # the model may have written the digest in an earlier pass.
+            all_text = ""
+            for msg in messages:
+                if msg["role"] == "assistant":
+                    content = msg["content"]
+                    if isinstance(content, list):
+                        for block in content:
+                            if hasattr(block, "text"):
+                                all_text += block.text
+            all_text = all_text.replace("**", "")
+            idx = all_text.find("Subject:")
+            if idx != -1:
+                return all_text[idx:]
+
+            # Last resort: if we have substantial text, prepend a Subject line
+            # so the rest of the pipeline (email sender) still works.
+            if len(full_text) > 200:
+                import datetime
+                today = datetime.date.today().strftime("%B %d, %Y")
+                header = f"Subject: Weekly AI Adoption Gap Digest – {today}\n\n"
+                return header + full_text
+
             raise RuntimeError("end_turn reached but no digest found")
 
         if response.stop_reason == "pause_turn":
