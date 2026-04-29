@@ -55,14 +55,27 @@ When writing the digest:
 - Highlight the "so what" for practitioners and researchers
 """
 
-USER_PROMPT = """\
-Search the web for the latest news (past 7 days) about the AI adoption gap \
-and capability overhang in AI. Find the top 3 most relevant, recent stories. \
+def build_user_prompt() -> str:
+    import datetime
+    today = datetime.date.today()
+    cutoff = today - datetime.timedelta(days=30)
+    return f"""\
+Today's date is {today.strftime("%B %d, %Y")}.
+
+Search the web for news about the AI adoption gap and capability overhang \
+published on or after {cutoff.strftime("%B %d, %Y")} (i.e. within the last 30 days). \
+Find the top 3 most relevant, recent stories. \
 Consider both professional/enterprise adoption and personal/consumer adoption — \
 if media coverage spans both, try to include at least one story from each lens.
 
 Use at most 5 web searches total — be precise with your queries so you find \
-the right articles quickly without over-searching.
+the right articles quickly without over-searching. Include the current year \
+({today.year}) in your search queries to bias results toward recent coverage.
+
+IMPORTANT: Every story MUST have been published on or after \
+{cutoff.strftime("%B %d, %Y")}. Before including a story, verify its \
+publication date from the search result. If you cannot confirm a date, \
+skip that story and find a newer one.
 
 IMPORTANT: You must include the full URL for every story. Do not omit or \
 approximate links — use the exact URL returned by your web search results.
@@ -119,7 +132,7 @@ def run_agent() -> str:
     client = anthropic.Anthropic()
 
     tools = [{"type": "web_search_20260209", "name": "web_search"}]
-    messages = [{"role": "user", "content": USER_PROMPT}]
+    messages = [{"role": "user", "content": build_user_prompt()}]
 
     MAX_ITERATIONS = 15
     for iteration in range(MAX_ITERATIONS):
